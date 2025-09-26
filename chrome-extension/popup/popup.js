@@ -44,10 +44,8 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
     toastContainer.appendChild(toast);
 
-    // Add show class for animation
     setTimeout(() => toast.classList.add("show"), 10);
 
-    // Remove toast after 3 seconds
     setTimeout(() => {
       toast.classList.remove("show");
       setTimeout(() => toast.remove(), 300);
@@ -197,7 +195,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (response.ok) {
         showToast("Registration successful! Awaiting admin approval.", true);
-        // Clear form
         registerFormElement.reset();
         setTimeout(() => showLoginForm(), 1000);
       } else {
@@ -217,7 +214,93 @@ document.addEventListener("DOMContentLoaded", () => {
     showLoginForm();
     setOnlineStatus(false);
   });
-  // … earlier code unchanged …
+
+  // =============================
+  // Forgot Password + Reset Password
+  // =============================
+
+  const forgotPasswordLink = document.getElementById("forgotPasswordLink");
+  const forgotPasswordForm = document.getElementById("forgotPasswordForm");
+  const backToLoginFromForgot = document.getElementById("backToLoginFromForgot");
+  const resetPasswordForm = document.getElementById("resetPasswordForm");
+
+  // Show Forgot Password form
+  forgotPasswordLink?.addEventListener("click", (e) => {
+    e.preventDefault();
+    loginForm.classList.add("hidden");
+    forgotPasswordForm.classList.remove("hidden");
+  });
+
+  // Back to login
+  backToLoginFromForgot?.addEventListener("click", (e) => {
+    e.preventDefault();
+    forgotPasswordForm.classList.add("hidden");
+    loginForm.classList.remove("hidden");
+  });
+
+  // Handle Forgot Password submission
+  forgotPasswordForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = forgotPasswordForm.querySelector("input").value.trim();
+
+    if (!email) {
+      showToast("Please enter your email.", false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        showToast("Password reset link sent to your email.", true);
+        forgotPasswordForm.reset();
+      } else {
+        showToast(data.message || "Failed to send reset link.", false);
+      }
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      showToast("Network error. Try again.", false);
+    }
+  });
+
+  // Handle Reset Password form submission
+  resetPasswordForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const token = resetPasswordForm.querySelector("input[name='token']").value.trim();
+    const newPassword = resetPasswordForm.querySelector("input[name='newPassword']").value;
+
+    if (!token || !newPassword) {
+      showToast("Please fill in all fields.", false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, newPassword }), // ✅ fixed here
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        showToast("Password successfully reset! You can now log in.", true);
+        resetPasswordForm.reset();
+        showLoginForm();
+      } else {
+        showToast(data.message || "Password reset failed.", false);
+      }
+    } catch (error) {
+      console.error("Reset password error:", error);
+      showToast("Network error. Try again.", false);
+    }
+  });
 
   // popup.js
   scrapeButton.addEventListener("click", async (e) => {

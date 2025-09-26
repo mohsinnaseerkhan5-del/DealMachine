@@ -1,25 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DealMachine Scraper</title>
     <link rel="stylesheet" href="popup.css">
 </head>
+
 <body>
     <div class="container">
-        <!-- Background Effects -->
+        <!-- Enhanced Background Effects -->
         <div class="bg-grid"></div>
         <div class="bg-glow"></div>
-        
+        <div class="bg-particles"></div>
+        <div class="bg-waves"></div>
+        <div class="hologram-overlay"></div>
+
+        <!-- Animated Border Frame -->
+        <div class="border-frame">
+            <div class="corner corner-tl"></div>
+            <div class="corner corner-tr"></div>
+            <div class="corner corner-bl"></div>
+            <div class="corner corner-br"></div>
+        </div>
+
         <!-- Header -->
         <div class="header">
             <div class="logo">
-                <div class="logo-icon">⚡</div>
+                <div class="logo-container">
+                    <div class="logo-icon">⚡</div>
+                    <div class="logo-pulse"></div>
+                </div>
                 <span class="logo-text">DEALMACHINE</span>
+                <div class="logo-underline"></div>
             </div>
             <div class="status-indicator" id="statusIndicator">
-                <div class="status-dot"></div>
+                <div class="status-dot-container">
+                    <div class="status-dot"></div>
+                    <div class="status-ring"></div>
+                </div>
                 <span class="status-text">OFFLINE</span>
             </div>
         </div>
@@ -28,109 +48,188 @@
         <div class="main-content">
             <!-- Login Form -->
             <div class="form-container" id="loginForm">
+                <div class="form-scanner"></div>
                 <div class="form-header">
                     <h2 class="form-title">ACCESS TERMINAL</h2>
                     <div class="form-subtitle">Secure Authentication Required</div>
+                    <div class="security-bars">
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                    </div>
                 </div>
-                
+
                 <form id="loginFormElement">
                     <div class="input-group">
                         <label class="input-label">EMAIL</label>
-                        <input type="email" id="loginEmail" class="cyber-input" placeholder="user@domain.com" required>
-                        <div class="input-border"></div>
+                        <div class="input-wrapper">
+                            <input type="email" id="loginEmail" class="cyber-input" placeholder="user@domain.com"
+                                required>
+                            <div class="input-border"></div>
+                            <div class="input-glow"></div>
+                            <div class="input-scan"></div>
+                        </div>
                     </div>
-                    
+
                     <div class="input-group">
                         <label class="input-label">PASSWORD</label>
-                        <input type="password" id="loginPassword" class="cyber-input" placeholder="••••••••" required>
-                        <div class="input-border"></div>
+                        <div class="input-wrapper">
+                            <input type="password" id="loginPassword" class="cyber-input" placeholder="••••••••"
+                                required>
+                            <div class="input-border"></div>
+                            <div class="input-glow"></div>
+                            <div class="input-scan"></div>
+                        </div>
                     </div>
-                    
+
                     <button type="submit" class="cyber-button primary">
                         <span class="button-text">AUTHENTICATE</span>
                         <div class="button-glow"></div>
+                        <div class="button-circuit"></div>
+                        <div class="button-energy"></div>
                     </button>
                 </form>
-                
+
                 <div class="form-footer">
                     <button class="link-button" id="showRegister">New User? Register Here</button>
                 </div>
             </div>
 
+            <!-- Forgot Password Link -->
+        <a href="#" id="forgotPasswordLink" style="margin-left:110px" class="link-button">
+            Forgot Password?
+        </a>
+
             <!-- Register Form -->
             <div class="form-container hidden" id="registerForm">
+                <div class="form-scanner"></div>
                 <div class="form-header">
                     <h2 class="form-title">USER REGISTRATION</h2>
                     <div class="form-subtitle">Request Access Credentials</div>
+                    <div class="security-bars">
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                    </div>
                 </div>
-                
+
                 <form id="registerFormElement">
                     <div class="input-group">
                         <label class="input-label">FIRST NAME</label>
-                        <input type="text" id="registerFirstName" class="cyber-input" placeholder="John" required>
-                        <div class="input-border"></div>
+                        <div class="input-wrapper">
+                            <input type="text" id="registerFirstName" class="cyber-input" placeholder="John" required>
+                            <div class="input-border"></div>
+                            <div class="input-glow"></div>
+                            <div class="input-scan"></div>
+                        </div>
                     </div>
-                    
+
                     <div class="input-group">
                         <label class="input-label">LAST NAME</label>
-                        <input type="text" id="registerLastName" class="cyber-input" placeholder="Doe" required>
-                        <div class="input-border"></div>
+                        <div class="input-wrapper">
+                            <input type="text" id="registerLastName" class="cyber-input" placeholder="Doe" required>
+                            <div class="input-border"></div>
+                            <div class="input-glow"></div>
+                            <div class="input-scan"></div>
+                        </div>
                     </div>
-                    
+
                     <div class="input-group">
                         <label class="input-label">EMAIL</label>
-                        <input type="email" id="registerEmail" class="cyber-input" placeholder="user@domain.com" required>
-                        <div class="input-border"></div>
+                        <div class="input-wrapper">
+                            <input type="email" id="registerEmail" class="cyber-input" placeholder="user@domain.com"
+                                required>
+                            <div class="input-border"></div>
+                            <div class="input-glow"></div>
+                            <div class="input-scan"></div>
+                        </div>
                     </div>
-                    
+
                     <div class="input-group">
                         <label class="input-label">PASSWORD</label>
-                        <input type="password" id="registerPassword" class="cyber-input" placeholder="••••••••" required>
-                        <div class="input-border"></div>
+                        <div class="input-wrapper">
+                            <input type="password" id="registerPassword" class="cyber-input" placeholder="••••••••"
+                                required>
+                            <div class="input-border"></div>
+                            <div class="input-glow"></div>
+                            <div class="input-scan"></div>
+                        </div>
                     </div>
-                    
+
                     <button type="submit" class="cyber-button primary">
                         <span class="button-text">REQUEST ACCESS</span>
                         <div class="button-glow"></div>
+                        <div class="button-circuit"></div>
+                        <div class="button-energy"></div>
                     </button>
                 </form>
-                
+
                 <div class="form-footer">
                     <button class="link-button" id="showLogin">Already Registered? Login</button>
                 </div>
             </div>
 
+            <!-- Forgot Password Form -->
+            <form id="forgotPasswordForm" class="hidden form-container">
+                <h2 class="text-2xl mb-4 text-center" style="margin-bottom: 15px; margin-top:20px">Reset Password</h2>
+                <div class="input-container">
+                    <input type="email" placeholder="Enter your email" class="cyber-input" required>
+                </div>
+                <button type="submit" class="cyber-button" style="margin-top: 25px;">Send Reset Link</button>
+                <div class="text-sm text-center mt-4" style="margin-top:20px;">
+                    <a href="#" id="backToLoginFromForgot" style="margin-left:110px; margin-top:40px;" class="link-button">Back to Login</a>
+                </div>
+            </form>
+
+
             <!-- Dashboard -->
             <div class="dashboard hidden" id="dashboard">
+                <div class="form-scanner"></div>
                 <div class="user-info">
-                    <div class="user-avatar">👤</div>
+                    <div class="user-avatar-container">
+                        <div class="user-avatar">👤</div>
+                        <div class="avatar-ring"></div>
+                        <div class="avatar-glow"></div>
+                    </div>
                     <div class="user-details">
                         <div class="user-name" id="userName">User Name</div>
                         <div class="user-status" id="userStatus">APPROVED</div>
                     </div>
-                    <button class="logout-button" id="logoutButton">⏻</button>
+                    <button class="logout-button" id="logoutButton">
+                        ⏻
+                        <div class="logout-hover"></div>
+                    </button>
                 </div>
-                
+
                 <div class="scraper-section">
                     <div class="scraper-header">
                         <h3 class="section-title">DATA EXTRACTION</h3>
-                        <div class="scraper-status" id="scraperStatus">READY</div>
+                        <div class="scraper-status-container">
+                            <div class="scraper-status" id="scraperStatus">READY</div>
+                            <div class="status-pulse"></div>
+                        </div>
                     </div>
-                    
+
                     <button class="cyber-button scrape-button" id="scrapeButton">
                         <span class="button-text">INITIATE SCRAPE</span>
                         <div class="button-glow"></div>
+                        <div class="button-circuit"></div>
+                        <div class="button-energy"></div>
                         <div class="loading-spinner hidden"></div>
                     </button>
-                    
+
                     <div class="stats-grid">
                         <div class="stat-item">
+                            <div class="stat-glow"></div>
                             <div class="stat-value" id="lastScrapeCount">0</div>
                             <div class="stat-label">LAST SCRAPE</div>
+                            <div class="stat-bar"></div>
                         </div>
                         <div class="stat-item">
+                            <div class="stat-glow"></div>
                             <div class="stat-value" id="totalScrapes">0</div>
                             <div class="stat-label">TOTAL RUNS</div>
+                            <div class="stat-bar"></div>
                         </div>
                     </div>
                 </div>
@@ -143,5 +242,5 @@
 
     <script src="popup.js"></script>
 </body>
-</html>
 
+</html>
