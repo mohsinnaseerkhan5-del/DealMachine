@@ -1,6 +1,5 @@
-// backend/src/app/api/auth/forgot-password/route.js
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma"; // adjust import if needed
+import prisma from "../../../lib/prisma"; // correct relative path
 import crypto from "crypto";
 
 export async function POST(req) {
