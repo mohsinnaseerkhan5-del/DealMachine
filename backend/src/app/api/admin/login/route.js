@@ -1,7 +1,30 @@
 import { NextResponse } from 'next/server';
 import { prisma, verifyPassword, generateToken } from '@/lib/auth';
+import Cors from 'cors';
+
+// Initialize CORS middleware
+const cors = Cors({
+  origin: '*', // For testing; restrict to extension ID in production
+  methods: ['POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+});
+
+// Helper to run middleware in Next.js
+function runMiddleware(req, res, fn) {
+  return new Promise((resolve, reject) => {
+    fn(req, res, (result) => {
+      if (result instanceof Error) return reject(result);
+      return resolve(result);
+    });
+  });
+}
 
 export async function POST(request) {
+  const res = new NextResponse();
+
+  // Run CORS middleware
+  await runMiddleware(request, res, cors);
+
   try {
     const { email, password } = await request.json();
 
@@ -14,9 +37,7 @@ export async function POST(request) {
 
     // Find admin user by email
     const user = await prisma.user.findUnique({
-      where: { 
-        email: email.toLowerCase(),
-      },
+      where: { email: email.toLowerCase() },
     });
 
     if (!user || !user.isAdmin) {
@@ -54,4 +75,3 @@ export async function POST(request) {
     );
   }
 }
-

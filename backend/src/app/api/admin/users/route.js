@@ -4,11 +4,11 @@ import { requireAdmin, prisma } from '@/lib/auth';
 export async function GET(request) {
   try {
     const authResult = await requireAdmin(request);
-    
+
     if (authResult.error) {
       return NextResponse.json(
         { error: authResult.error },
-        { status: authResult.status }
+        { status: authResult.status, headers: { 'Access-Control-Allow-Origin': '*' } }
       );
     }
 
@@ -34,16 +34,26 @@ export async function GET(request) {
       },
     });
 
-    return NextResponse.json({
-      users,
+    return NextResponse.json(users, {
+      headers: { 'Access-Control-Allow-Origin': '*' },
     });
 
   } catch (error) {
     console.error('Get users error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500, headers: { 'Access-Control-Allow-Origin': '*' } }
     );
   }
 }
 
+// For preflight OPTIONS request (needed for Chrome extensions)
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  });
+}

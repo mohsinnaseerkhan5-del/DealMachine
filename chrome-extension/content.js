@@ -5,6 +5,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action !== "executeScraperInContent") return;
   const jwt = request.token;
   const siteToken = localStorage.getItem("token");
+
   if (!jwt || !siteToken) {
     sendResponse({ success: false, count: 0, error: "Missing tokens" });
     return;
@@ -45,15 +46,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
       // CSV header
       const rows = [
-        [
-          "Street",
-          "City",
-          "State",
-          "Zip",
-          "PhoneNumber",
-          "FirstName",
-          "LastName",
-        ],
+        ["Street", "City", "State", "Zip", "PhoneNumber", "FirstName", "LastName"],
       ];
 
       while (true) {
@@ -69,7 +62,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           const zip = p.property_address_zip || "";
 
           for (const ph of p.phone_numbers || []) {
-            // Only wireless *and* carrier contains "Wireless"
             const carrier = (ph.carrier || "").toLowerCase();
             if (ph.type === "W" && carrier.includes("wireless")) {
               const c = ph.contact || {};
@@ -78,15 +70,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 if (num && !seen.has(num)) {
                   seen.add(num);
                   total++;
-                  rows.push([
-                    street,
-                    city,
-                    state,
-                    zip,
-                    num,
-                    c.given_name || "",
-                    c.surname || "",
-                  ]);
+                  rows.push([street, city, state, zip, num, c.given_name || "", c.surname || ""]);
                 }
               }
             }
@@ -100,9 +84,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       console.log(`🎉 Done — unique wireless = ${total}`);
 
       // Build CSV text
-      const csvText = rows
-        .map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(","))
-        .join("\r\n");
+      const csvText = rows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(",")).join("\r\n");
 
       // Trigger CSV download
       const blob = new Blob([csvText], { type: "text/csv;charset=utf-8;" });
@@ -113,8 +95,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       link.click();
       link.remove();
 
-      // Log session to backend
-      await fetch("https://leads-scraper2.onrender.com/api/scraping", {
+      // Log session to Render backend
+      await fetch("https://dealmachine.onrender.com/api/scraping", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -126,8 +108,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       sendResponse({ success: true, count: total });
     } catch (err) {
       console.error("🚨 Scraper Error:", err);
-      // Log failure
-      await fetch("https://leads-scraper2.onrender.com/api/scraping", {
+      // Log failure to Render backend
+      await fetch("https://dealmachine.onrender.com/api/scraping", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

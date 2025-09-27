@@ -12,7 +12,8 @@ export async function POST(request, { params }) {
       );
     }
 
-    const { id } = params;
+    // Convert id to integer
+    const id = parseInt(params.id);
 
     // Check if user exists
     const user = await prisma.user.findUnique({
@@ -77,4 +78,3 @@ export async function POST(request, { params }) {
     );
   }
 }
-
