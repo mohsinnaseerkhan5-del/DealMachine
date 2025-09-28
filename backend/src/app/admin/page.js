@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+// Use NEXT_PUBLIC_API_URL at build time, fallback to your Render URL
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://dealmachine.onrender.com';
+
 export default function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,6 +16,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     checkAuth();
     fetchUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const checkAuth = () => {
@@ -26,22 +30,24 @@ export default function AdminDashboard() {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('/api/admin/users', {
+      const response = await fetch(`${API_BASE}/api/admin/users`, {
         headers: {
           'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
         },
       });
 
       if (response.ok) {
         const data = await response.json();
-        setUsers(data.users);
-        calculateStats(data.users);
+        setUsers(data.users || []);
+        calculateStats(data.users || []);
       } else if (response.status === 401) {
         router.push('/admin/login');
       } else {
         setError('Failed to fetch users');
       }
-    } catch (error) {
+    } catch (err) {
+      console.error('fetchUsers error:', err);
       setError('Connection error');
     } finally {
       setLoading(false);
@@ -58,20 +64,23 @@ export default function AdminDashboard() {
   const handleApproveUser = async (userId) => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`/api/admin/users/${userId}/approve`, {
+      const response = await fetch(`${API_BASE}/api/admin/users/${userId}/approve`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
         },
       });
 
       if (response.ok) {
-        fetchUsers(); // Refresh the list
+        await fetchUsers(); // Refresh the list
         showToast('User approved successfully', 'success');
       } else {
         showToast('Failed to approve user', 'error');
       }
-    } catch (error) {
+    } catch (err) {
+      console.error('approve error:', err);
       showToast('Connection error', 'error');
     }
   };
@@ -79,20 +88,23 @@ export default function AdminDashboard() {
   const handleRevokeUser = async (userId) => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`/api/admin/users/${userId}/revoke`, {
+      const response = await fetch(`${API_BASE}/api/admin/users/${userId}/revoke`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
         },
       });
 
       if (response.ok) {
-        fetchUsers(); // Refresh the list
+        await fetchUsers(); // Refresh the list
         showToast('User access revoked', 'success');
       } else {
         showToast('Failed to revoke user access', 'error');
       }
-    } catch (error) {
+    } catch (err) {
+      console.error('revoke error:', err);
       showToast('Connection error', 'error');
     }
   };
@@ -103,11 +115,10 @@ export default function AdminDashboard() {
   };
 
   const showToast = (message, type) => {
-    // Simple toast implementation
     const toast = document.createElement('div');
     toast.className = `fixed top-4 right-4 p-4 rounded border font-mono text-sm z-50 ${
-      type === 'success' 
-        ? 'bg-green-500/20 border-green-500 text-green-400' 
+      type === 'success'
+        ? 'bg-green-500/20 border-green-500 text-green-400'
         : 'bg-red-500/20 border-red-500 text-red-400'
     }`;
     toast.textContent = message;
@@ -116,13 +127,17 @@ export default function AdminDashboard() {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return dateString;
+    }
   };
 
   if (loading) {
@@ -287,4 +302,3 @@ export default function AdminDashboard() {
     </div>
   );
 }
-
