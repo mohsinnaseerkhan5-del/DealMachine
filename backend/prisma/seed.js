@@ -5,8 +5,8 @@ const prisma = new PrismaClient();
 
 async function main() {
   // Create admin user
-  const adminEmail = 'admin@dealmachine.com';
-  const adminPassword = 'admin123'; // Change this in production
+  const adminEmail = 'mohsinkhan@dealmachine.com';
+  const adminPassword = 'admin123khan'; // Change this in production
   
   const existingAdmin = await prisma.user.findUnique({
     where: { email: adminEmail },
