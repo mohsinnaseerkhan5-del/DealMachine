@@ -1,38 +1,14 @@
-import { NextResponse } from 'next/server';
-import { prisma, verifyPassword, generateToken } from '@/lib/auth';
-import Cors from 'cors';
-
-// Initialize CORS middleware
-const cors = Cors({
-  origin: '*', // For testing: allow all. For production, restrict to your Chrome extension ID
-  methods: ['POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-});
-
-// Helper to run middleware in Next.js
-function runMiddleware(req, res, fn) {
-  return new Promise((resolve, reject) => {
-    fn(req, res, (result) => {
-      if (result instanceof Error) return reject(result);
-      return resolve(result);
-    });
-  });
-}
+import { NextResponse } from "next/server";
+import { prisma, verifyPassword, generateToken } from "@/lib/auth";
 
 export async function POST(request) {
-  // Create a dummy response object for middleware
-  const res = new NextResponse();
-
-  // Run CORS middleware
-  await runMiddleware(request, res, cors);
-
   try {
     const { email, password } = await request.json();
 
     if (!email || !password) {
       return NextResponse.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
+        { error: "Email and password are required" },
+        { status: 400, headers: corsHeaders() }
       );
     }
 
@@ -43,8 +19,8 @@ export async function POST(request) {
 
     if (!user) {
       return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
+        { error: "Invalid credentials" },
+        { status: 401, headers: corsHeaders() }
       );
     }
 
@@ -52,35 +28,48 @@ export async function POST(request) {
     const isValidPassword = await verifyPassword(password, user.password);
     if (!isValidPassword) {
       return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
+        { error: "Invalid credentials" },
+        { status: 401, headers: corsHeaders() }
       );
     }
 
-    // Check if user is approved (unless admin)
+    // Check approval (unless admin)
     if (!user.isAdmin && !user.isApproved) {
       return NextResponse.json(
-        { error: 'Account pending admin approval' },
-        { status: 403 }
+        { error: "Account pending admin approval" },
+        { status: 403, headers: corsHeaders() }
       );
     }
 
     // Generate JWT token
     const token = generateToken({ userId: user.id });
 
-    // Return user data (excluding password)
+    // Exclude password from response
     const { password: _, ...userWithoutPassword } = user;
 
-    return NextResponse.json({
-      token,
-      user: userWithoutPassword,
-    });
-
-  } catch (error) {
-    console.error('Login error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { token, user: userWithoutPassword },
+      { status: 200, headers: corsHeaders() }
+    );
+  } catch (error) {
+    console.error("Login error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500, headers: corsHeaders() }
     );
   }
+}
+
+// Common CORS headers
+function corsHeaders() {
+  return {
+    "Access-Control-Allow-Origin": "*", // later replace with your extension ID
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  };
+}
+
+// Handle preflight (CORS)
+export async function OPTIONS() {
+  return NextResponse.json({}, { status: 200, headers: corsHeaders() });
 }

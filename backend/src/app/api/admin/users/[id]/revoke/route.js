@@ -1,10 +1,11 @@
-import { NextResponse } from 'next/server';
-import { requireAdmin, prisma } from '@/lib/auth';
+import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import { requireAdmin } from "@/lib/auth";
 
 export async function POST(request, { params }) {
   try {
     const authResult = await requireAdmin(request);
-    
+
     if (authResult.error) {
       return NextResponse.json(
         { error: authResult.error },
@@ -12,8 +13,14 @@ export async function POST(request, { params }) {
       );
     }
 
-    // Convert id to integer
-    const id = parseInt(params.id);
+    // Convert id to integer safely
+    const id = parseInt(params.id, 10);
+    if (isNaN(id)) {
+      return NextResponse.json(
+        { error: "Invalid user ID" },
+        { status: 400 }
+      );
+    }
 
     // Check if user exists
     const user = await prisma.user.findUnique({
@@ -29,27 +36,24 @@ export async function POST(request, { params }) {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     if (user.isAdmin) {
       return NextResponse.json(
-        { error: 'Cannot revoke admin user' },
+        { error: "Cannot revoke an admin user" },
         { status: 400 }
       );
     }
 
     if (!user.isApproved) {
       return NextResponse.json(
-        { error: 'User is already not approved' },
+        { error: "User is already not approved" },
         { status: 400 }
       );
     }
 
-    // Revoke the user's approval
+    // Revoke approval
     const updatedUser = await prisma.user.update({
       where: { id },
       data: { isApproved: false },
@@ -66,14 +70,13 @@ export async function POST(request, { params }) {
     });
 
     return NextResponse.json({
-      message: 'User access revoked successfully',
+      message: "User access revoked successfully",
       user: updatedUser,
     });
-
   } catch (error) {
-    console.error('Revoke user error:', error);
+    console.error("Revoke user error:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
-import { requireAdmin, prisma } from '@/lib/auth';
+import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import { requireAdmin } from "@/lib/auth";
 
 export async function GET(request) {
   try {
@@ -8,7 +9,10 @@ export async function GET(request) {
     if (authResult.error) {
       return NextResponse.json(
         { error: authResult.error },
-        { status: authResult.status, headers: { 'Access-Control-Allow-Origin': '*' } }
+        {
+          status: authResult.status,
+          headers: { "Access-Control-Allow-Origin": "*" },
+        }
       );
     }
 
@@ -30,19 +34,21 @@ export async function GET(request) {
         },
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: "desc",
       },
     });
 
     return NextResponse.json(users, {
-      headers: { 'Access-Control-Allow-Origin': '*' },
+      headers: { "Access-Control-Allow-Origin": "*" },
     });
-
   } catch (error) {
-    console.error('Get users error:', error);
+    console.error("Get users error:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500, headers: { 'Access-Control-Allow-Origin': '*' } }
+      { error: "Internal server error" },
+      {
+        status: 500,
+        headers: { "Access-Control-Allow-Origin": "*" },
+      }
     );
   }
 }
@@ -51,9 +57,9 @@ export async function GET(request) {
 export async function OPTIONS() {
   return new NextResponse(null, {
     headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
     },
   });
 }

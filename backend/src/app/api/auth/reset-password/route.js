@@ -1,34 +1,22 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma"; // fixed relative path
+import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import Cors from "cors";
-
-// Initialize CORS middleware
-const cors = Cors({
-  origin: "*", // For testing; restrict to your extension ID in production
-  methods: ["POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-});
-
-// Helper to run middleware in Next.js
-function runMiddleware(req, res, fn) {
-  return new Promise((resolve, reject) => {
-    fn(req, res, (result) => {
-      if (result instanceof Error) return reject(result);
-      return resolve(result);
-    });
-  });
-}
 
 export async function POST(req) {
-  const res = new NextResponse();
-
-  // Run CORS middleware
-  await runMiddleware(req, res, cors);
-
   try {
     const { token, newPassword } = await req.json();
 
+    if (!token || !newPassword) {
+      return NextResponse.json(
+        { message: "Token and new password are required" },
+        {
+          status: 400,
+          headers: corsHeaders(),
+        }
+      );
+    }
+
+    // Find reset token in DB
     const resetToken = await prisma.passwordResetToken.findUnique({
       where: { token },
       include: { user: true },
@@ -37,28 +25,48 @@ export async function POST(req) {
     if (!resetToken || resetToken.expiresAt < new Date()) {
       return NextResponse.json(
         { message: "Invalid or expired token" },
-        { status: 400 }
+        {
+          status: 400,
+          headers: corsHeaders(),
+        }
       );
     }
 
-    // hash password
+    // Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    // update user password
+    // Update user password
     await prisma.user.update({
       where: { id: resetToken.userId },
       data: { password: hashedPassword },
     });
 
-    // delete token after use
+    // Delete reset token (prevent reuse)
     await prisma.passwordResetToken.delete({ where: { id: resetToken.id } });
 
-    return NextResponse.json({ message: "Password reset successful" });
+    return NextResponse.json(
+      { message: "Password reset successful" },
+      { status: 200, headers: corsHeaders() }
+    );
   } catch (error) {
-    console.error(error);
+    console.error("Reset error:", error);
     return NextResponse.json(
       { message: "Error resetting password" },
-      { status: 500 }
+      { status: 500, headers: corsHeaders() }
     );
   }
+}
+
+// Common CORS headers
+function corsHeaders() {
+  return {
+    "Access-Control-Allow-Origin": "*", // later restrict to your extension ID
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  };
+}
+
+// Handle CORS preflight
+export async function OPTIONS() {
+  return NextResponse.json({}, { status: 200, headers: corsHeaders() });
 }

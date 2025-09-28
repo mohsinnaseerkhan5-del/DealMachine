@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { requireAdmin, prisma } from "@/lib/auth";
+import prisma from "@/lib/prisma";
+import { requireAdmin } from "@/lib/auth";
 
 export async function POST(request, { params }) {
   try {
@@ -13,7 +14,14 @@ export async function POST(request, { params }) {
     }
 
     // Convert id to integer
-    const id = parseInt(params.id);
+    const id = parseInt(params.id, 10);
+
+    if (isNaN(id)) {
+      return NextResponse.json(
+        { error: "Invalid user ID" },
+        { status: 400 }
+      );
+    }
 
     // Check if user exists
     const user = await prisma.user.findUnique({
