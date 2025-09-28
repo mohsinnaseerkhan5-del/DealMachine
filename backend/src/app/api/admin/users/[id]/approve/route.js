@@ -18,14 +18,7 @@ export async function POST(request, { params }) {
       );
     }
 
-    // Convert id to integer
-    const id = parseInt(params.id, 10);
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { error: "Invalid user ID" },
-        { status: 400, headers }
-      );
-    }
+    const { id } = params; // Keep ID as string
 
     // Check if user exists
     const user = await prisma.user.findUnique({

@@ -11,46 +11,25 @@ export async function DELETE(request, { params }) {
   try {
     const authResult = await requireAdmin(request);
     if (authResult.error) {
-      return NextResponse.json(
-        { error: authResult.error },
-        { status: authResult.status, headers }
-      );
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status, headers });
     }
 
-    const id = parseInt(params.id, 10);
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { error: "Invalid user ID" },
-        { status: 400, headers }
-      );
-    }
+    const { id } = params; // keep ID as string, do NOT parse
 
     const user = await prisma.user.findUnique({ where: { id } });
     if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404, headers }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404, headers });
     }
 
     if (user.isAdmin) {
-      return NextResponse.json(
-        { error: "Cannot delete an admin user" },
-        { status: 400, headers }
-      );
+      return NextResponse.json({ error: "Cannot delete an admin user" }, { status: 400, headers });
     }
 
     await prisma.user.delete({ where: { id } });
-    return NextResponse.json(
-      { message: "User deleted successfully" },
-      { headers }
-    );
+    return NextResponse.json({ message: "User deleted successfully" }, { headers });
   } catch (error) {
     console.error("Delete user error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500, headers }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500, headers });
   }
 }
 

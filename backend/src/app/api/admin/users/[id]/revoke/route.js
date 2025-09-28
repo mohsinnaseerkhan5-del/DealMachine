@@ -17,13 +17,7 @@ export async function POST(request, { params }) {
       );
     }
 
-    const id = parseInt(params.id, 10);
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { error: "Invalid user ID" },
-        { status: 400, headers }
-      );
-    }
+    const { id } = params; // keep ID as string, do NOT parse
 
     const user = await prisma.user.findUnique({
       where: { id },
@@ -38,24 +32,15 @@ export async function POST(request, { params }) {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404, headers }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404, headers });
     }
 
     if (user.isAdmin) {
-      return NextResponse.json(
-        { error: "Cannot revoke an admin user" },
-        { status: 400, headers }
-      );
+      return NextResponse.json({ error: "Cannot revoke an admin user" }, { status: 400, headers });
     }
 
     if (!user.isApproved) {
-      return NextResponse.json(
-        { error: "User is already not approved" },
-        { status: 400, headers }
-      );
+      return NextResponse.json({ error: "User is already not approved" }, { status: 400, headers });
     }
 
     const updatedUser = await prisma.user.update({
@@ -79,10 +64,7 @@ export async function POST(request, { params }) {
     );
   } catch (error) {
     console.error("Revoke user error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500, headers }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500, headers });
   }
 }
 
