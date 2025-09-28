@@ -7,7 +7,7 @@ const headers = {
   "Content-Type": "application/json",
 };
 
-export async function POST(request, { params }) {
+export async function DELETE(request, { params }) {
   try {
     const authResult = await requireAdmin(request);
     if (authResult.error) {
@@ -25,18 +25,7 @@ export async function POST(request, { params }) {
       );
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        isApproved: true,
-        isAdmin: true,
-      },
-    });
-
+    const user = await prisma.user.findUnique({ where: { id } });
     if (!user) {
       return NextResponse.json(
         { error: "User not found" },
@@ -46,39 +35,18 @@ export async function POST(request, { params }) {
 
     if (user.isAdmin) {
       return NextResponse.json(
-        { error: "Cannot revoke an admin user" },
+        { error: "Cannot delete an admin user" },
         { status: 400, headers }
       );
     }
 
-    if (!user.isApproved) {
-      return NextResponse.json(
-        { error: "User is already not approved" },
-        { status: 400, headers }
-      );
-    }
-
-    const updatedUser = await prisma.user.update({
-      where: { id },
-      data: { isApproved: false },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        isApproved: true,
-        isAdmin: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
-
+    await prisma.user.delete({ where: { id } });
     return NextResponse.json(
-      { message: "User access revoked successfully", user: updatedUser },
+      { message: "User deleted successfully" },
       { headers }
     );
   } catch (error) {
-    console.error("Revoke user error:", error);
+    console.error("Delete user error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500, headers }
@@ -91,7 +59,7 @@ export async function OPTIONS() {
   return new NextResponse(null, {
     headers: {
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Methods": "DELETE, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type, Authorization",
     },
   });

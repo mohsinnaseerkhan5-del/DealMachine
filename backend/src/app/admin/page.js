@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-// Use NEXT_PUBLIC_API_URL at build time, fallback to your Render URL
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://dealmachine.onrender.com';
 
 export default function AdminDashboard() {
@@ -21,25 +20,18 @@ export default function AdminDashboard() {
 
   const checkAuth = () => {
     const token = localStorage.getItem('adminToken');
-    if (!token) {
-      router.push('/admin/login');
-      return;
-    }
+    if (!token) router.push('/admin/login');
   };
 
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('adminToken');
       const response = await fetch(`${API_BASE}/api/admin/users`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json'
-        },
+        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
       });
 
       if (response.ok) {
         const data = await response.json();
-        // ✅ Use data directly instead of data.users
         setUsers(data);
         calculateStats(data);
       } else if (response.status === 401) {
@@ -63,49 +55,34 @@ export default function AdminDashboard() {
   };
 
   const handleApproveUser = async (userId) => {
-    try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${API_BASE}/api/admin/users/${userId}/approve`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-      });
-
-      if (response.ok) {
-        await fetchUsers(); // Refresh the list
-        showToast('User approved successfully', 'success');
-      } else {
-        showToast('Failed to approve user', 'error');
-      }
-    } catch (err) {
-      console.error('approve error:', err);
-      showToast('Connection error', 'error');
-    }
+    await adminAction(userId, 'approve', 'User approved successfully', 'Failed to approve user');
   };
 
   const handleRevokeUser = async (userId) => {
+    await adminAction(userId, 'revoke', 'User access revoked', 'Failed to revoke user');
+  };
+
+  const handleDeleteUser = async (userId) => {
+    if (!confirm('Are you sure you want to delete this user?')) return;
+    await adminAction(userId, 'delete', 'User deleted successfully', 'Failed to delete user', 'DELETE');
+  };
+
+  const adminAction = async (userId, action, successMsg, errorMsg, method = 'POST') => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${API_BASE}/api/admin/users/${userId}/revoke`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
+      const response = await fetch(`${API_BASE}/api/admin/users/${userId}/${action}`, {
+        method,
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
       });
 
       if (response.ok) {
-        await fetchUsers(); // Refresh the list
-        showToast('User access revoked', 'success');
+        await fetchUsers();
+        showToast(successMsg, 'success');
       } else {
-        showToast('Failed to revoke user access', 'error');
+        showToast(errorMsg, 'error');
       }
     } catch (err) {
-      console.error('revoke error:', err);
+      console.error(`${action} error:`, err);
       showToast('Connection error', 'error');
     }
   };
@@ -130,11 +107,7 @@ export default function AdminDashboard() {
   const formatDate = (dateString) => {
     try {
       return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+        year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
       });
     } catch {
       return dateString;
@@ -151,15 +124,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
-      {/* Background Effects */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
-      </div>
-
       <div className="relative z-10">
-        {/* Header */}
         <header className="border-b border-cyan-500/30 bg-gray-900/50 backdrop-blur-xl">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center py-6">
@@ -182,7 +147,6 @@ export default function AdminDashboard() {
           </div>
         </header>
 
-        {/* Stats */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="bg-gray-900/50 border border-cyan-500/30 rounded-lg p-6 backdrop-blur-xl">
@@ -199,55 +163,33 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Error Message */}
           {error && (
             <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded text-red-400 font-mono text-center">
               {error}
             </div>
           )}
 
-          {/* Users Table */}
           <div className="bg-gray-900/50 border border-cyan-500/30 rounded-lg backdrop-blur-xl overflow-hidden">
             <div className="px-6 py-4 border-b border-cyan-500/20">
-              <h2 className="text-lg font-bold text-cyan-400 font-mono tracking-wider">
-                USER REGISTRY
-              </h2>
+              <h2 className="text-lg font-bold text-cyan-400 font-mono tracking-wider">USER REGISTRY</h2>
             </div>
             
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-800/50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-cyan-400 uppercase tracking-wider font-mono">
-                      User
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-cyan-400 uppercase tracking-wider font-mono">
-                      Email
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-cyan-400 uppercase tracking-wider font-mono">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-cyan-400 uppercase tracking-wider font-mono">
-                      Registered
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-cyan-400 uppercase tracking-wider font-mono">
-                      Actions
-                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-cyan-400 uppercase tracking-wider font-mono">User</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-cyan-400 uppercase tracking-wider font-mono">Email</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-cyan-400 uppercase tracking-wider font-mono">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-cyan-400 uppercase tracking-wider font-mono">Registered</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-cyan-400 uppercase tracking-wider font-mono">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-700/50">
                   {users.map((user) => (
                     <tr key={user.id} className="hover:bg-gray-800/30 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-white font-mono">
-                          {user.firstName} {user.lastName}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-gray-300 font-mono text-sm">
-                          {user.email}
-                        </div>
-                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-white font-mono">{user.firstName} {user.lastName}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-300 font-mono text-sm">{user.email}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-2 py-1 text-xs font-bold rounded font-mono ${
                           user.isApproved
@@ -257,9 +199,7 @@ export default function AdminDashboard() {
                           {user.isApproved ? 'APPROVED' : 'PENDING'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-400 font-mono text-sm">
-                        {formatDate(user.createdAt)}
-                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-400 font-mono text-sm">{formatDate(user.createdAt)}</td>
                       <td className="px-6 py-4 whitespace-nowrap space-x-2">
                         {!user.isApproved ? (
                           <button
@@ -276,30 +216,26 @@ export default function AdminDashboard() {
                             REVOKE
                           </button>
                         )}
+                        {!user.isAdmin && (
+                          <button
+                            onClick={() => handleDeleteUser(user.id)}
+                            className="bg-gray-500/20 border border-gray-500 text-gray-400 px-3 py-1 rounded text-xs font-mono hover:bg-gray-500/30 transition-colors"
+                          >
+                            DELETE
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              
               {users.length === 0 && (
-                <div className="text-center py-12 text-gray-400 font-mono">
-                  NO USERS REGISTERED
-                </div>
+                <div className="text-center py-12 text-gray-400 font-mono">NO USERS REGISTERED</div>
               )}
             </div>
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        .bg-grid-pattern {
-          background-image: 
-            linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
-          background-size: 20px 20px;
-        }
-      `}</style>
     </div>
   );
 }

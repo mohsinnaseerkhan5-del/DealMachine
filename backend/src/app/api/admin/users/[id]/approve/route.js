@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 
+const headers = {
+  "Access-Control-Allow-Origin": "*",
+  "Content-Type": "application/json",
+};
+
 export async function POST(request, { params }) {
   try {
     const authResult = await requireAdmin(request);
@@ -9,17 +14,16 @@ export async function POST(request, { params }) {
     if (authResult.error) {
       return NextResponse.json(
         { error: authResult.error },
-        { status: authResult.status }
+        { status: authResult.status, headers }
       );
     }
 
     // Convert id to integer
     const id = parseInt(params.id, 10);
-
     if (isNaN(id)) {
       return NextResponse.json(
         { error: "Invalid user ID" },
-        { status: 400 }
+        { status: 400, headers }
       );
     }
 
@@ -37,13 +41,16 @@ export async function POST(request, { params }) {
     });
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404, headers }
+      );
     }
 
     if (user.isApproved) {
       return NextResponse.json(
         { error: "User is already approved" },
-        { status: 400 }
+        { status: 400, headers }
       );
     }
 
@@ -63,15 +70,26 @@ export async function POST(request, { params }) {
       },
     });
 
-    return NextResponse.json({
-      message: "User approved successfully",
-      user: updatedUser,
-    });
+    return NextResponse.json(
+      { message: "User approved successfully", user: updatedUser },
+      { headers }
+    );
   } catch (error) {
     console.error("Approve user error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500, headers }
     );
   }
+}
+
+// Handle OPTIONS preflight requests for Chrome extension
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    },
+  });
 }
