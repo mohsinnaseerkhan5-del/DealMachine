@@ -39,8 +39,9 @@ export default function AdminDashboard() {
 
       if (response.ok) {
         const data = await response.json();
-        setUsers(data.users || []);
-        calculateStats(data.users || []);
+        // ✅ Use data directly instead of data.users
+        setUsers(data);
+        calculateStats(data);
       } else if (response.status === 401) {
         router.push('/admin/login');
       } else {
